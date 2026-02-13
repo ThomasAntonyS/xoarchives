@@ -1,20 +1,31 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdOutlineKeyboardArrowRight, MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { MdOutlineKeyboardArrowRight, MdOutlineKeyboardArrowLeft, MdClose, MdExpandMore, MdExpandLess } from "react-icons/md";
 import { useSwipeable } from 'react-swipeable';
-import { JellyTriangle } from 'ldrs/react'
-import 'ldrs/react/JellyTriangle.css'
-
-const API_KEY = import.meta.env.VITE_NASA_API_KEY;
 
 interface HeroProps {
-  selectedDate: string | null;
+  items: any[];
+  activeIndex: number;
+  setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
+  onBack: () => void;
 }
 
-export const Hero = ({ selectedDate }: HeroProps) => {
-  const [items, setItems] = useState<any[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+export const Hero = ({ items, activeIndex, setActiveIndex, onBack }: HeroProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const current = items[activeIndex];
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [activeIndex]);
+
+  useEffect(() => {
+  const originalStyle = window.getComputedStyle(document.body).overflow;
+  document.body.style.overflow = 'hidden';
+  
+  return () => {
+    document.body.style.overflow = originalStyle;
+  };
+}, []);
 
   const navigate = useCallback((direction: number) => {
     setActiveIndex((prev) => {
@@ -24,7 +35,7 @@ export const Hero = ({ selectedDate }: HeroProps) => {
       if (next >= items.length) return 0;
       return next;
     });
-  }, [items.length]);
+  }, [items.length, setActiveIndex]);
 
   const handlers = useSwipeable({
     onSwipedLeft: () => navigate(1),
@@ -35,140 +46,137 @@ export const Hero = ({ selectedDate }: HeroProps) => {
   });
 
   useEffect(() => {
-    const fetchArchive = async () => {
-      setLoading(true);
-      setActiveIndex(0);
-      
-      let start: string;
-      let end: string;
-
-      if (selectedDate) {
-        start = selectedDate;
-        const endDateObj = new Date(selectedDate);
-        endDateObj.setMonth(endDateObj.getMonth() + 6);
-        
-        const today = new Date();
-        end = endDateObj > today ? today.toISOString().split('T')[0] : endDateObj.toISOString().split('T')[0];
-      } else {
-        const today = new Date();
-        start = `${today.getFullYear()}-01-01`;
-        end = today.toISOString().split('T')[0];
-      }
-
-      try {
-        const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&start_date=${start}&end_date=${end}`
-        );
-        const result = await response.json();
-        // reverse() to show the most recent in that batch first
-        setItems(Array.isArray(result) ? result.reverse() : []);
-      } catch (e) {
-        console.error("Archive link failure:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArchive();
-  }, [selectedDate]);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        navigate(-1);
-      }
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        navigate(1);
-      }
+      if (e.key === 'ArrowLeft') navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
+      if (e.key === 'Escape') onBack();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, onBack]);
 
-  const current = items[activeIndex];
-
-  if (loading) return (
-    <div className="h-screen w-full bg-[#050505] flex flex-col items-center justify-center space-y-10 uppercase italic text-sm text-white tracking-[0.2em]">
-      <JellyTriangle
-        size="35"
-        speed="1.75"
-        color="white" 
-      />
-      <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 2 }}>
-        Fetching Interstellar Data...
-      </motion.div>
-    </div>
-  );
+  if (!current) return null;
 
   return (
-    <div {...handlers} className="relative h-dvh sm:h-full w-full flex flex-col overflow-hidden">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current?.date}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0 z-0"
+    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 sm:p-8 lg:p-12">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onBack}
+        className="absolute inset-0 backdrop-blur-md cursor-zoom-out"
+      />
+
+      <motion.div 
+        {...handlers}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-6xl h-full max-h-[85vh] bg-black border border-white/10 overflow-hidden shadow-2xl flex flex-col rounded-sm"
+      >
+        <button 
+          onClick={onBack}
+          className="absolute top-4 right-4 z-50 p-2 bg-black/40 hover:bg-white hover:text-black transition-all rounded-full border border-white/10 hover:cursor-pointer"
         >
-          <div 
-            className="absolute inset-0 bg-cover bg-no-repeat bg-center transition-transform duration-700"
-            style={{ backgroundImage: `url(${current?.hdurl || current?.url})` }}
-          />
-          <div className="absolute inset-0 bg-linear-to-b from-black/60 via-transparent to-black/90" />
-        </motion.div>
-      </AnimatePresence>
+          <MdClose size={20} />
+        </button>
 
-      <div className="relative z-10 grow flex flex-col justify-end p-6 sm:px-8">
-        <main className="w-full max-w-4xl mb-6 sm:mb-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current?.date}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-3 sm:space-y-6"
-            >
-              <p className="text-[9px] sm:text-xs text-white/90 tracking-widest">
-                CAPTURED ON: {current?.date.replace(/-/g, '.')}
-              </p>
-              <h2 className="text-2xl sm:text-5xl font-light tracking-tight leading-none uppercase italic">
-                {current?.title}
-              </h2>
-              <div className="h-px w-12 sm:w-24 bg-white/30" />
-              <p className="text-sm sm:text-base md:text-lg text-white/90 font-light max-w-4xl normal-case line-clamp-3 sm:line-clamp-none">
-                {current?.explanation.split('.').slice(0, 2).join('.')}.
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        </main>
-
-        <footer className="w-full space-y-6">
-          <div className="flex items-end justify-between gap-4 ">
-            <div className="flex items-center gap-2 text-[9px] text-white/90 tracking-[0.2em]">
-              <span className="px-2 py-1 border border-white/90 rounded"><MdOutlineKeyboardArrowLeft/></span>
-              <span className="px-2 py-1 border border-white/90 rounded"><MdOutlineKeyboardArrowRight/></span>
-              <span className="ml-2 hidden sm:inline uppercase">SWIPE OR USE Keyboard ARROWS TO BROWSE DATA</span>
-            </div>
-            <div className="text-right">
-              <p className="text-[8px] sm:text-[9px] text-white/90 tracking-widest">IMAGE</p>
-              <p className="text-sm sm:text-xl font-bold tracking-tighter">
-                {String(activeIndex + 1).padStart(3, '0')} <span className="text-white/20">/</span> {String(items.length).padStart(3, '0')}
-              </p>
-            </div>
-          </div>
-          <div className="w-full h-px sm:h-0.5 bg-white/10 relative">
-            <motion.div 
-              className="absolute h-full bg-white shadow-[0_0_15px_white]"
-              animate={{ width: `${((activeIndex + 1) / items.length) * 100}%` }}
-              transition={{ type: "spring", stiffness: 50, damping: 20 }}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current?.date}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-0"
+          >
+            <div 
+              className="absolute inset-0 -top-20 sm:top-0 bg-contain bg-no-repeat bg-center transition-transform duration-700"
+              style={{ backgroundImage: `url(${current?.hdurl || current?.url})` }}
             />
-          </div>
-        </footer>
-      </div>
+            <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/95" />
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="relative z-10 grow flex flex-col justify-end p-6 sm:p-10 overflow-hidden">
+          <main className="w-full max-w-4xl mb-6 sm:mb-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current?.date}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-3 sm:space-y-4"
+              >
+                <div className="relative">
+                  <div className={`
+                    relative transition-all duration-500 rounded-lg overflow-hidden
+                    ${isExpanded ? 'bg-black/60 backdrop-blur-sm py-4 pr-4' : ''}
+                  `}>
+                    <div className={`
+                      relative transition-all duration-500
+                      ${isExpanded ? 'max-h-[30vh] overflow-y-auto custom-scrollbar' : 'max-h-16 overflow-hidden'}
+                    `}>
+                      <p className={`text-xs sm:text-sm md:text-base text-white/80 font-light leading-relaxed ${isExpanded?"pl-2":""} pr-2`}>
+                        {current?.explanation}
+                      </p>
+                      
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="mt-2 flex items-center gap-1 text-[10px] sm:text-[12px] tracking-widest uppercase text-white hover:cursor-pointer hover:underline transition-colors"
+                  >
+                    {isExpanded ? (
+                      <> Show Less <MdExpandLess size={16} /></>
+                    ) : (
+                      <> Read More <MdExpandMore size={16} /></>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </main>
+
+          <footer className="w-full space-y-5">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+              <div className="flex items-center gap-2 text-[9px] tracking-[0.2em]">
+                <button onClick={() => navigate(-1)} className="p-1.5 border border-white/40 rounded hover:bg-white hover:cursor-pointer hover:text-black transition-colors">
+                  <MdOutlineKeyboardArrowLeft size={16}/>
+                </button>
+                <button onClick={() => navigate(1)} className="p-1.5 border border-white/40 rounded hover:bg-white hover:cursor-pointer hover:text-black transition-colors">
+                  <MdOutlineKeyboardArrowRight size={16}/>
+                </button>
+                <span className="ml-2 hidden sm:inline uppercase ">Use Keyboard Arrows</span>
+                <span className="ml-2 inline sm:hidden uppercase ">Swipe or click arrows</span>
+              </div>
+              
+              <div className="text-right">
+                <p className="text-xs sm:text-lg font-bold tracking-tighter tabular-nums">
+                  {String(activeIndex + 1).padStart(3, '0')} <span className="text-white/20">/</span> {String(items.length).padStart(3, '0')}
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full h-0.5 bg-white/10 relative">
+              <motion.div 
+                className="absolute h-full bg-white shadow-[0_0_10px_white]"
+                initial={{ width: 0 }}
+                animate={{ width: `${((activeIndex + 1) / items.length) * 100}%` }}
+                transition={{ type: "spring", stiffness: 50, damping: 20 }}
+              />
+            </div>
+          </footer>
+        </div>
+      </motion.div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+      `}</style>
     </div>
   );
 };
