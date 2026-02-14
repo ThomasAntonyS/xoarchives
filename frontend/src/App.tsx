@@ -5,9 +5,8 @@ import { Gallery } from './components/Gallery';
 import { AnimatePresence, motion } from 'framer-motion';
 import { JellyTriangle } from 'ldrs/react';
 import 'ldrs/react/JellyTriangle.css'
+import axios from 'axios';
 import './App.css';
-
-const API_KEY = import.meta.env.VITE_NASA_API_KEY;
 
 function App() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -35,10 +34,8 @@ function App() {
       }
 
       try {
-        const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&start_date=${start}&end_date=${end}`
-        );
-        const result = await response.json();
+        const api_base = import.meta.env.VITE_API_BASE
+        const result = await axios.post(`${api_base}/apod`, {startDate:start,endDate:end});
         if (Array.isArray(result)) {
           setItems(result.reverse());
         }
