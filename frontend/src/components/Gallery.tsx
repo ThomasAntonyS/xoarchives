@@ -66,10 +66,10 @@ export const Gallery = ({ items, loading, onImageClick }: any) => {
                 className="w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 brightness-[0.85] group-hover:brightness-100"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
-                <p className="text-[9px] font-semibold tracking-wide text-white mb-2 uppercase line-clamp-2">
+                <p className="text-[9px] font-semibold tracking-wide text-white mb-2 uppercase">
                   {item.date.replace(/-/g, '.')}
                 </p>
-                <h3 className="text-base font-light leading-tight uppercase italic max-w-[90%] tracking-tight">
+                <h3 className="text-base font-light leading-tight uppercase italic max-w-[90%] tracking-tight line-clamp-2">
                   {item.title}
                 </h3>
                 <div className="h-px w-0 hidden sm:inline group-hover:w-full bg-white/40 transition-all duration-700 mt-4" />
