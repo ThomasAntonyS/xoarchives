@@ -36,8 +36,9 @@ function App() {
       try {
         const api_base = import.meta.env.VITE_API_BASE
         const result = await axios.post(`${api_base}/apod`, {startDate:start,endDate:end});
-        if (Array.isArray(result)) {
-          setItems(result.reverse());
+        const data = result.data
+        if (Array.isArray(data)) {
+          setItems(data);
         }
       } catch (e) {
         console.error(e);
@@ -70,18 +71,18 @@ function App() {
             className="fixed bottom-8 sm:bottom-12 left-1/2 -translate-x-1/2 z-200 px-4 w-auto whitespace-nowrap"
           >
             <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-white/10 animate-pulse blur-xl" />
+              <div className="absolute inset-0 rounded-full bg-white animate-pulse blur-xl" />
               
-              <div className="relative bg-zinc-950/80 backdrop-blur-2xl border border-white/10 px-4 sm:px-6 py-2.5 rounded-full flex items-center gap-3 sm:gap-4 shadow-2xl">
-                <JellyTriangle size="12" speed="1.75" color="white" />
+              <div className="relative bg-white backdrop-blur-2xl border border-white/10 px-4 sm:px-6 py-2.5 rounded-full flex items-center gap-3 sm:gap-4 shadow-2xl">
+                <JellyTriangle size="12" speed="1.75" color="black" />
                 
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-black"></span>
                   </span>
                   
-                  <p className="uppercase italic text-[9px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] text-white/90">
+                  <p className="uppercase italic text-[9px] sm:text-[10px] text-black font-semibold">
                     Fetching Data
                     <span className="hidden xs:inline"> from Archive</span>
                   </p>

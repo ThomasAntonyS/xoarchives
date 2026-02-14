@@ -24,18 +24,18 @@ app.use(cors({
   credentials: true
 }));
 
+app.post('/apod', async(req,res)=>{
+  
+  const {startDate,endDate} = req.body
+  const API_KEY = process.env.NASA_API_KEY
 
-app.get('/apod', async(req,res)=>{
-    console.log("called")
-    const {startDate,endDate} = req.body
-    const API_KEY = process.env.NASA_API_KEY
-    try {
-        const response = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&start_date=${startDate}&end_date=${endDate}`)
-        const data = await response.json()
-        return data;
-    } catch (error) {
-        console.log("Error Fetcing data")
-    }
+  try {
+    const data = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&start_date=${startDate}&end_date=${endDate}`)
+    const response = await data.json()
+    return res.send(response).status(200);
+  } catch (error) {
+    console.log("Error Fetcing data")
+  }
 })
 
 app.get("/", async (req, res) => {
