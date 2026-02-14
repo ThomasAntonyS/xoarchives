@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
+import {Footer} from './components/Footer'
 import { Gallery } from './components/Gallery';
 import { AnimatePresence, motion } from 'framer-motion';
 import { JellyTriangle } from 'ldrs/react';
@@ -110,6 +111,10 @@ function App() {
             onBack={() => setIsHeroOpen(false)} 
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        <Footer/>
       </AnimatePresence>
     </div>
   );
