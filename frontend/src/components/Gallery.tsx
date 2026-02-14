@@ -38,7 +38,7 @@ export const Gallery = ({ items, loading, onImageClick }: any) => {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
             <div className="flex flex-col">
               <span className="text-[10px] tracking-wide uppercase text-white">Range</span>
-              <span className="text-xs font-mono tracking-wide text-white/80">
+              <span className="text-xs tracking-wide text-white/80">
                 {loading ? "Loading..." : `${endDate} - ${startDate}`}
               </span>
             </div>
